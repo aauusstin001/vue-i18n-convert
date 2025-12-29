@@ -27,13 +27,14 @@ function isOnlyChinese(str) {
 }
 
 /**
- * 清理字符串：去除首尾空格、换行、制表符
+ * 清理字符串：只去除首尾空格，保留换行符、制表符等特殊字符
  * @param {string} str
  * @returns {string}
  */
 function cleanString(str) {
   if (!str) return '';
-  return str.trim().replace(/\n/g, '').replace(/\t/g, '');
+  // 只去除首尾空格，不移除 \n \r \t 等字符，这些字符需要保留用于匹配
+  return str.trim();
 }
 /**
  * 检测字符串是否已经是 i18n 格式
@@ -353,7 +354,15 @@ function saveUnmatchedKeys(outputDir) {
   // 构建输出内容
   let content = `\n========== ${timestamp} ==========\n`;
   content += `未匹配的中文文本 (共 ${unmatchedTexts.size} 个):\n`;
-  content += Array.from(unmatchedTexts).map(text => `'${text}'`).join('\n');
+  // 转义特殊字符，让换行符、制表符等可见
+  content += Array.from(unmatchedTexts).map(text => {
+    const escaped = text
+      .replace(/\\/g, '\\\\')  // 先转义反斜杠
+      .replace(/\n/g, '\\n')   // 转义换行符
+      .replace(/\r/g, '\\r')   // 转义回车符
+      .replace(/\t/g, '\\t');  // 转义制表符
+    return `'${escaped}'`;
+  }).join('\n');
   content += '\n';
 
   // 追加到文件

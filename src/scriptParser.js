@@ -263,7 +263,9 @@ function getTemplateString(node) {
   const expressions = node.expressions;
 
   for (let i = 0; i < quasis.length; i++) {
-    result += quasis[i].value.raw;
+    // 使用 cooked 而不是 raw，这样会正确处理 \n、\r、\t 等转义序列
+    result += quasis[i].value.cooked;
+    //result += quasis[i].value.raw;
     if (i < expressions.length) {
       // 将表达式转换回 ${...} 格式
       const exprCode = recast.print(expressions[i]).code;

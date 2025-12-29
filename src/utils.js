@@ -357,7 +357,7 @@ function saveUnmatchedKeys(outputDir) {
   // 转义特殊字符，让换行符、制表符等可见
   content += Array.from(unmatchedTexts).map(text => {
     const escaped = text
-      .replace(/\\/g, '\\\\')  // 先转义反斜杠
+     // .replace(/\\/g, '\\\\')  // 先转义反斜杠
       .replace(/\n/g, '\\n')   // 转义换行符
       .replace(/\r/g, '\\r')   // 转义回车符
       .replace(/\t/g, '\\t');  // 转义制表符

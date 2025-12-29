@@ -1,0 +1,6 @@
+# .gitignore
+
+node_modules/
+*.log
+test.vue
+test-backup.vue

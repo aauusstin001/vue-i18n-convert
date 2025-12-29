@@ -1,0 +1,28 @@
+{
+  "name": "vue-i18n-converter",
+  "version": "1.0.0",
+  "description": "自动将 Vue 文件中的中文转换为 i18n 格式",
+  "main": "index.js",
+  "bin": {
+    "vue-i18n-convert": "./index.js"
+  },
+  "scripts": {
+    "test": "node index.js test.vue"
+  },
+  "keywords": [
+    "vue",
+    "i18n",
+    "vue-i18n",
+    "converter"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/generator": "^7.23.0",
+    "@babel/parser": "^7.23.0",
+    "@babel/traverse": "^7.23.0",
+    "@babel/types": "^7.23.0",
+    "@vue/compiler-sfc": "^3.3.0",
+    "recast": "^0.23.11"
+  }
+}

@@ -25,10 +25,10 @@ npm install
 
 ```bash
 # 转换单个 Vue 文件（自动查找 zh.js）
-vue-i18n-convert ./src/components/HelloWorld.vue
+node index.js ./src/components/HelloWorld.vue
 
 # 指定语言包文件路径
-vue-i18n-convert ./src/components/HelloWorld.vue ./locales/zh.js
+node index.js ./src/components/HelloWorld.vue ./locales/zh.js
 ```
 
 ### 高级选项
@@ -38,8 +38,8 @@ vue-i18n-convert ./src/components/HelloWorld.vue ./locales/zh.js
 默认情况下，如果中文在 zh.js 中找不到对应的 key，会使用中文本身作为 key。使用 `--skip-unmatched` 选项可以跳过这些文本，保留原中文不转换。
 
 ```bash
-vue-i18n-convert ./src/components/HelloWorld.vue --skip-unmatched
-vue-i18n-convert ./src/components/HelloWorld.vue -s
+node index.js ./src/components/HelloWorld.vue --skip-unmatched
+node index.js ./src/components/HelloWorld.vue -s
 ```
 
 #### 匹配指定路径前缀
@@ -48,10 +48,10 @@ vue-i18n-convert ./src/components/HelloWorld.vue -s
 
 ```bash
 # 只使用 pda.* 和 common.* 的 key
-vue-i18n-convert ./src/components/HelloWorld.vue --match-path pda
+node index.js ./src/components/HelloWorld.vue --match-path pda
 
 # 只使用 pda.barcode.* 和 common.* 的 key
-vue-i18n-convert ./src/components/HelloWorld.vue -mp pda.barcode
+node index.js ./src/components/HelloWorld.vue -mp pda.barcode
 ```
 
 ## 转换示例

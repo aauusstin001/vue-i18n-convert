@@ -58,9 +58,9 @@ function convertScript(scriptContent) {
               return; // 跳过未匹配的文本
             }
 
-            // 替换为 i18n.t('key') + '：'
+            // 替换为 $i18n.t('key') + '：'
             const i18nCall = b.callExpression(
-              b.memberExpression(b.identifier('i18n'), b.identifier('t')),
+              b.memberExpression(b.identifier('$i18n'), b.identifier('t')),
               [b.literal(key)]
             );
             const binaryExpr = b.binaryExpression(
@@ -77,9 +77,9 @@ function convertScript(scriptContent) {
               return; // 跳过未匹配的文本
             }
 
-            // 替换为 i18n.t('key')
+            // 替换为 $i18n.t('key')
             const i18nCall = b.callExpression(
-              b.memberExpression(b.identifier('i18n'), b.identifier('t')),
+              b.memberExpression(b.identifier('$i18n'), b.identifier('t')),
               [b.literal(key)]
             );
             path.replace(i18nCall);
@@ -140,9 +140,9 @@ function convertScript(scriptContent) {
             );
           });
 
-          // 构建 i18n.t('key', {param1: xxx})
+          // 构建 $i18n.t('key', {param1: xxx})
           const i18nCall = b.callExpression(
-            b.memberExpression(b.identifier('i18n'), b.identifier('t')),
+            b.memberExpression(b.identifier('$i18n'), b.identifier('t')),
             [b.literal(key), b.objectExpression(properties)]
           );
 
@@ -169,7 +169,7 @@ function convertScript(scriptContent) {
           }
 
           const i18nCall = b.callExpression(
-            b.memberExpression(b.identifier('i18n'), b.identifier('t')),
+            b.memberExpression(b.identifier('$i18n'), b.identifier('t')),
             [b.literal(key)]
           );
 
@@ -226,7 +226,7 @@ function isInConsoleCall(path) {
 }
 
 /**
- * 检查节点是否已经在 i18n.t() 或 $t() 调用中
+ * 检查节点是否已经在 i18n.t() 或 $i18n.t() 或 $t() 调用中
  */
 function isInI18nCall(path) {
   if (!path.parent || !path.parent.node) {
@@ -237,8 +237,8 @@ function isInI18nCall(path) {
   if (parent.type === 'CallExpression') {
     const callee = parent.callee;
     if (callee && callee.type === 'MemberExpression') {
-      // i18n.t()
-      if (callee.object && callee.object.name === 'i18n' && callee.property && callee.property.name === 't') {
+      // i18n.t() 或 $i18n.t()
+      if ((callee.object && (callee.object.name === 'i18n' || callee.object.name === '$i18n')) && callee.property && callee.property.name === 't') {
         return true;
       }
       // this.$t()

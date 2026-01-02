@@ -1,7 +1,7 @@
 /**
  * Template 解析和转换
  */
-const { isOnlyChinese, cleanString, getKeyForChinese, detectColonSuffix } = require('./utils');
+const { isOnlyChinese, cleanString, getKeyForChinese, detectColonSuffix, extractTemplateVars } = require('./utils');
 
 /**
  * 转换中文文本为 i18n 格式（带冒号后缀处理）
@@ -66,6 +66,50 @@ function convertTemplate(templateContent) {
     return match;
   });
 
+  // 1.5. 处理插值表达式中的模板字符串
+  // 如 {{ `请输入${type}` }}
+  result = result.replace(/\{\{\s*`([^`]*)`\s*\}\}/g, (match, templateContent) => {
+    // 跳过已经包含 $t 的内容
+    if (match.includes('$t(')) {
+      return match;
+    }
+
+    // 使用 extractTemplateVars 提取模板字符串中的变量
+    const { text, params, hasChinese } = extractTemplateVars(templateContent);
+
+    if (hasChinese) {
+      const cleaned = cleanString(text);
+      const { hasColonSuffix, colonChar, textWithoutColon } = detectColonSuffix(cleaned);
+
+      if (hasColonSuffix) {
+        const key = getKeyForChinese(textWithoutColon);
+        if (key === null) return match; // 跳过未匹配的文本
+
+        if (params.length > 0) {
+          // 有变量，构建参数对象
+          const paramsObj = params.map(p => `${p.name}: ${p.expr}`).join(', ');
+          return `{{ $t('${key}', { ${paramsObj} }) + '${colonChar}' }}`;
+        } else {
+          // 无变量
+          return `{{ $t('${key}') + '${colonChar}' }}`;
+        }
+      } else {
+        const key = getKeyForChinese(cleaned);
+        if (key === null) return match; // 跳过未匹配的文本
+
+        if (params.length > 0) {
+          // 有变量，构建参数对象
+          const paramsObj = params.map(p => `${p.name}: ${p.expr}`).join(', ');
+          return `{{ $t('${key}', { ${paramsObj} }) }}`;
+        } else {
+          // 无变量
+          return `{{ $t('${key}') }}`;
+        }
+      }
+    }
+    return match;
+  });
+
   // 2. 处理纯文本节点中的中文（标签之间的文本）
   // 包括混合文本节点（如：包装基数:{{ data.item.packqty }}）
   result = result.replace(/>([^<]+)</g, (match, text) => {
@@ -75,8 +119,8 @@ function convertTemplate(templateContent) {
       const parts = [];
       let lastIndex = 0;
 
-      // 匹配所有的插值表达式
-      const interpolationRegex = /\{\{[^}]+\}\}/g;
+      // 匹配所有的插值表达式（使用非贪婪匹配，支持嵌套的 {}）
+      const interpolationRegex = /\{\{[\s\S]*?\}\}/g;
       let interpolationMatch;
 
       while ((interpolationMatch = interpolationRegex.exec(text)) !== null) {
@@ -162,7 +206,46 @@ function convertTemplate(templateContent) {
     return match;
   });
 
-  // 5. 恢复 HTML 注释
+  // 5. 处理 v-bind 或 : 绑定中的模板字符串（反引号）
+  // 如 :title="`委外${wareTypeLabel}单`"
+  result = result.replace(/:([a-zA-Z-]+)=["']`([^`]*)`["']/g, (match, attrName, templateContent) => {
+    // 使用 extractTemplateVars 提取模板字符串中的变量
+    const { text, params, hasChinese } = extractTemplateVars(templateContent);
+
+    if (hasChinese) {
+      const cleaned = cleanString(text);
+      const { hasColonSuffix, colonChar, textWithoutColon } = detectColonSuffix(cleaned);
+
+      if (hasColonSuffix) {
+        const key = getKeyForChinese(textWithoutColon);
+        if (key === null) return match; // 跳过未匹配的文本
+
+        if (params.length > 0) {
+          // 有变量，构建参数对象
+          const paramsObj = params.map(p => `${p.name}: ${p.expr}`).join(', ');
+          return `:${attrName}="$t('${key}', { ${paramsObj} }) + '${colonChar}'"`;
+        } else {
+          // 无变量
+          return `:${attrName}="$t('${key}') + '${colonChar}'"`;
+        }
+      } else {
+        const key = getKeyForChinese(cleaned);
+        if (key === null) return match; // 跳过未匹配的文本
+
+        if (params.length > 0) {
+          // 有变量，构建参数对象
+          const paramsObj = params.map(p => `${p.name}: ${p.expr}`).join(', ');
+          return `:${attrName}="$t('${key}', { ${paramsObj} })"`;
+        } else {
+          // 无变量
+          return `:${attrName}="$t('${key}')"`;
+        }
+      }
+    }
+    return match;
+  });
+
+  // 6. 恢复 HTML 注释
   result = result.replace(/___COMMENT_PLACEHOLDER___(\d+)___/g, (_match, index) => {
     return comments[parseInt(index)];
   });

@@ -359,9 +359,23 @@ function collectBinaryParts(node) {
 
     // 如果是二元表达式且操作符是 +
     if (n.type === 'BinaryExpression' && n.operator === '+') {
-      // 递归收集左右两边
-      collect(n.left);
-      collect(n.right);
+      // 检查左右两边是否包含字符串字面量
+      const hasStringInLeft = containsStringLiteral(n.left);
+      const hasStringInRight = containsStringLiteral(n.right);
+
+      // 只有当左边或右边包含字符串时，才继续拆分
+      // 否则把整个表达式作为一个变量（如 i+1）
+      if (hasStringInLeft || hasStringInRight) {
+        collect(n.left);
+        collect(n.right);
+      } else {
+        // 整个二元表达式作为一个变量
+        parts.push({
+          type: 'expression',
+          value: null,
+          node: n
+        });
+      }
     } else if ((n.type === 'Literal' || n.type === 'StringLiteral') && typeof n.value === 'string') {
       // 字符串字面量（支持 Literal 和 StringLiteral）
       parts.push({
@@ -381,6 +395,27 @@ function collectBinaryParts(node) {
 
   collect(node);
   return parts;
+}
+
+/**
+ * 检查节点是否包含字符串字面量
+ * @param {Object} node - AST 节点
+ * @returns {boolean}
+ */
+function containsStringLiteral(node) {
+  if (!node) return false;
+
+  // 如果是字符串字面量
+  if ((node.type === 'Literal' || node.type === 'StringLiteral') && typeof node.value === 'string') {
+    return true;
+  }
+
+  // 如果是二元表达式，递归检查左右两边
+  if (node.type === 'BinaryExpression' && node.operator === '+') {
+    return containsStringLiteral(node.left) || containsStringLiteral(node.right);
+  }
+
+  return false;
 }
 
 /**

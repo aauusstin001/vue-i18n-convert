@@ -174,6 +174,12 @@ function convertScript(scriptContent) {
           return;
         }
 
+        // 跳过对象属性的键
+        if (isObjectPropertyKey(path)) {
+          this.traverse(path);
+          return;
+        }
+
         // 跳过 console.* 调用
         if (isInConsoleCall(path)) {
           this.traverse(path);
@@ -483,6 +489,23 @@ function isInI18nCall(path) {
       return true;
     }
   }
+  return false;
+}
+
+/**
+ * 检查节点是否是对象属性的键
+ */
+function isObjectPropertyKey(path) {
+  if (!path.parent || !path.parent.node) {
+    return false;
+  }
+
+  const parent = path.parent.node;
+  // 检查父节点是否是 Property 或 ObjectProperty，并且当前节点是该属性的 key
+  if ((parent.type === 'Property' || parent.type === 'ObjectProperty') && parent.key === path.node) {
+    return true;
+  }
+
   return false;
 }
 
